@@ -61,7 +61,7 @@ private:
 	Object *_editor_plugin = nullptr;
 
 	// Regions
-	RegionSize _region_size = SIZE_64;
+	RegionSize _region_size = SIZE_256; // Larger regions for 1km terrain
 	bool _save_16_bit = false;
 	real_t _label_distance = 0.f;
 	int _label_size = 48;
@@ -75,17 +75,24 @@ private:
 	// Terrain Mesh
 	Terrain3DMesher *_terrain_mesher = nullptr;
 	Ref<Terrain3DMaterial> _material;
-	int _mesh_lods = 2;
+	int _mesh_lods = 4; // Increased for larger terrain
 	int _tessellation_level = 0;
-	int _mesh_size = 24;
+	int _mesh_size = 48; // Increased for better coverage
 	real_t _vertex_spacing = 1.0f;
 	real_t _cull_margin = 0.0f;
 
 	// Terrain Size Control
 	Vector3 _terrain_position = Vector3(0, 0, 0);
-	Vector2 _terrain_size = Vector2(64, 64);
+	Vector2 _terrain_size = Vector2(1000, 1000); // 1km x 1km default
 	real_t _terrain_height_scale = 100.0f;
 	bool _terrain_limit_size = true;
+
+	// Individual terrain bounds (for advanced control)
+	real_t _terrain_north_bound = 500.0f;  // +Z direction
+	real_t _terrain_south_bound = 500.0f;  // -Z direction
+	real_t _terrain_east_bound = 500.0f;   // +X direction
+	real_t _terrain_west_bound = 500.0f;   // -X direction
+	bool _use_individual_bounds = false;
 
 	RenderingServer::ShadowCastingSetting _cast_shadows = RenderingServer::SHADOW_CASTING_SETTING_ON;
 	GeometryInstance3D::GIMode _gi_mode = GeometryInstance3D::GI_MODE_STATIC;
@@ -148,6 +155,10 @@ private:
 			const Terrain3DData::HeightFilter p_filter, const bool require_nav, const AABB &p_global_aabb) const;
 	void _generate_triangle_pair(PackedVector3Array &p_vertices, PackedVector2Array *p_uvs, const int32_t p_lod,
 			const Terrain3DData::HeightFilter p_filter, const bool require_nav, const int32_t x, const int32_t z) const;
+
+	// Utility functions for terrain bounds
+	void _sync_individual_bounds_from_size();
+	void _sync_size_from_individual_bounds();
 
 public:
 	static DebugLevel debug_level; // Initialized in terrain_3d.cpp
@@ -235,6 +246,18 @@ public:
 	real_t get_terrain_height_scale() const { return _terrain_height_scale; }
 	void set_terrain_limit_size(const bool p_limit);
 	bool get_terrain_limit_size() const { return _terrain_limit_size; }
+
+	// Individual terrain bounds control
+	void set_use_individual_bounds(const bool p_use);
+	bool get_use_individual_bounds() const { return _use_individual_bounds; }
+	void set_terrain_north_bound(const real_t p_bound);
+	real_t get_terrain_north_bound() const { return _terrain_north_bound; }
+	void set_terrain_south_bound(const real_t p_bound);
+	real_t get_terrain_south_bound() const { return _terrain_south_bound; }
+	void set_terrain_east_bound(const real_t p_bound);
+	real_t get_terrain_east_bound() const { return _terrain_east_bound; }
+	void set_terrain_west_bound(const real_t p_bound);
+	real_t get_terrain_west_bound() const { return _terrain_west_bound; }
 
 	void set_vertex_spacing(const real_t p_spacing);
 	real_t get_vertex_spacing() const { return _vertex_spacing; }

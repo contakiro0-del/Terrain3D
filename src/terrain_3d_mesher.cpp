@@ -320,6 +320,16 @@ void Terrain3DMesher::snap() {
 	IS_INIT(VOID);
 	// Always update target position in shader
 	Vector3 target_pos = _terrain->get_clipmap_target_position();
+
+	// For limited terrain, center on terrain position instead of following camera
+	if (_terrain->get_terrain_limit_size()) {
+		Vector3 terrain_pos = _terrain->get_terrain_position();
+		Vector2 terrain_size = _terrain->get_terrain_size();
+
+		// Center the clipmap on the terrain center for static rendering
+		target_pos = terrain_pos;
+	}
+
 	if (_material.is_valid()) {
 		RS->material_set_param(_material, "_target_pos", target_pos);
 	}
@@ -396,6 +406,11 @@ void Terrain3DMesher::snap() {
 				}
 				t = t.scaled(lod_scale);
 				t.origin += pos;
+
+				// Apply terrain size limits to mesh instances if enabled
+				bool should_render = is_within_terrain_bounds(t.origin);
+				RS->instance_set_visible(mesh_array[instance], should_render && _terrain->is_visible_in_tree());
+
 				RS->instance_set_transform(mesh_array[instance], t);
 				RS->instance_teleport(mesh_array[instance]);
 			}
@@ -475,3 +490,4 @@ void Terrain3DMesher::update_aabbs(const real_t p_cull_margin, const Vector2 &p_
 	}
 	return;
 }
+

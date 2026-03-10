@@ -172,6 +172,8 @@ void Terrain3D::_setup_terrain_mesher() {
 		LOG(DEBUG, "Creating mesher");
 		_terrain_mesher = new Terrain3DMesher();
 	}
+
+	// Initialize with standard parameters
 	_terrain_mesher->initialize(this, _mesh_size, _mesh_lods, _tessellation_level, _vertex_spacing, _material->get_material_rid(), _render_layers);
 }
 
@@ -741,18 +743,34 @@ void Terrain3D::set_terrain_position(const Vector3 &p_position) {
 	SET_IF_DIFF(_terrain_position, p_position);
 	LOG(INFO, "Setting terrain position: ", _terrain_position);
 	set_global_position(_terrain_position);
+	// Force update of mesh visibility when position changes
+	if (_terrain_limit_size && _terrain_mesher) {
+		_terrain_mesher->snap();
+	}
 }
 
 void Terrain3D::set_terrain_size(const Vector2 &p_size) {
-	SET_IF_DIFF(_terrain_size, Vector2(CLAMP(p_size.x, 8.0f, 4096.0f), CLAMP(p_size.y, 8.0f, 4096.0f)));
+	SET_IF_DIFF(_terrain_size, Vector2(CLAMP(p_size.x, 0.01f, 100000.0f), CLAMP(p_size.y, 0.01f, 100000.0f)));
 	LOG(INFO, "Setting terrain size: ", _terrain_size);
+
+	// Sync individual bounds if not using them
+	_sync_individual_bounds_from_size();
+
 	if (_terrain_limit_size && _terrain_mesher) {
 		_setup_terrain_mesher();
+		// Force update of mesh visibility
+		if (_terrain_mesher) {
+			_terrain_mesher->snap();
+		}
+	}
+	// Update material uniforms if needed
+	if (_material.is_valid()) {
+		_material->update();
 	}
 }
 
 void Terrain3D::set_terrain_height_scale(const real_t p_scale) {
-	SET_IF_DIFF(_terrain_height_scale, CLAMP(p_scale, 0.1f, 1000.0f));
+	SET_IF_DIFF(_terrain_height_scale, CLAMP(p_scale, 0.01f, 10000.0f));
 	LOG(INFO, "Setting terrain height scale: ", _terrain_height_scale);
 	if (_material.is_valid()) {
 		_material->update();
@@ -764,6 +782,8 @@ void Terrain3D::set_terrain_limit_size(const bool p_limit) {
 	LOG(INFO, "Setting terrain limit size: ", _terrain_limit_size);
 	if (_terrain_mesher) {
 		_setup_terrain_mesher();
+		// Force immediate update of visibility
+		_terrain_mesher->snap();
 	}
 }
 
@@ -1321,6 +1341,21 @@ void Terrain3D::_validate_property(PropertyInfo &p_property) const {
 			p_property.usage = PROPERTY_USAGE_NO_EDITOR;
 		}
 	}
+	if (!_use_individual_bounds) {
+		// Hide individual bounds properties when not using them
+		if (p_property.name == StringName("terrain_north_bound") ||
+				p_property.name == StringName("terrain_south_bound") ||
+				p_property.name == StringName("terrain_east_bound") ||
+				p_property.name == StringName("terrain_west_bound")) {
+			p_property.usage = PROPERTY_USAGE_NO_EDITOR;
+		}
+	}
+	if (_use_individual_bounds) {
+		// Hide terrain_size when using individual bounds
+		if (p_property.name == StringName("terrain_size")) {
+			p_property.usage = PROPERTY_USAGE_NO_EDITOR;
+		}
+	}
 }
 
 void Terrain3D::_bind_methods() {
@@ -1409,6 +1444,18 @@ void Terrain3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_terrain_height_scale"), &Terrain3D::get_terrain_height_scale);
 	ClassDB::bind_method(D_METHOD("set_terrain_limit_size", "limit"), &Terrain3D::set_terrain_limit_size);
 	ClassDB::bind_method(D_METHOD("get_terrain_limit_size"), &Terrain3D::get_terrain_limit_size);
+
+	// Individual terrain bounds
+	ClassDB::bind_method(D_METHOD("set_use_individual_bounds", "use"), &Terrain3D::set_use_individual_bounds);
+	ClassDB::bind_method(D_METHOD("get_use_individual_bounds"), &Terrain3D::get_use_individual_bounds);
+	ClassDB::bind_method(D_METHOD("set_terrain_north_bound", "bound"), &Terrain3D::set_terrain_north_bound);
+	ClassDB::bind_method(D_METHOD("get_terrain_north_bound"), &Terrain3D::get_terrain_north_bound);
+	ClassDB::bind_method(D_METHOD("set_terrain_south_bound", "bound"), &Terrain3D::set_terrain_south_bound);
+	ClassDB::bind_method(D_METHOD("get_terrain_south_bound"), &Terrain3D::get_terrain_south_bound);
+	ClassDB::bind_method(D_METHOD("set_terrain_east_bound", "bound"), &Terrain3D::set_terrain_east_bound);
+	ClassDB::bind_method(D_METHOD("get_terrain_east_bound"), &Terrain3D::get_terrain_east_bound);
+	ClassDB::bind_method(D_METHOD("set_terrain_west_bound", "bound"), &Terrain3D::set_terrain_west_bound);
+	ClassDB::bind_method(D_METHOD("get_terrain_west_bound"), &Terrain3D::get_terrain_west_bound);
 
 	ClassDB::bind_method(D_METHOD("set_tessellation_level", "size"), &Terrain3D::set_tessellation_level);
 	ClassDB::bind_method(D_METHOD("get_tessellation_level"), &Terrain3D::get_tessellation_level);
@@ -1557,10 +1604,17 @@ void Terrain3D::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "cull_margin", PROPERTY_HINT_RANGE, "0.0,10000.0,.5,or_greater"), "set_cull_margin", "get_cull_margin");
 
 	ADD_SUBGROUP("Terrain Size Control", "terrain_");
-	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "terrain_position", PROPERTY_HINT_NONE, ""), "set_terrain_position", "get_terrain_position");
-	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "terrain_size", PROPERTY_HINT_NONE, ""), "set_terrain_size", "get_terrain_size");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "terrain_height_scale", PROPERTY_HINT_RANGE, "0.1,1000.0,0.1"), "set_terrain_height_scale", "get_terrain_height_scale");
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "terrain_limit_size"), "set_terrain_limit_size", "get_terrain_limit_size");
+	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "terrain_position", PROPERTY_HINT_NONE, "suffix:m", PROPERTY_USAGE_DEFAULT), "set_terrain_position", "get_terrain_position");
+	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "terrain_size", PROPERTY_HINT_NONE, "suffix:m", PROPERTY_USAGE_DEFAULT), "set_terrain_size", "get_terrain_size");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "terrain_height_scale", PROPERTY_HINT_RANGE, "0.01,10000.0,0.01,suffix:m"), "set_terrain_height_scale", "get_terrain_height_scale");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "terrain_limit_size", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT), "set_terrain_limit_size", "get_terrain_limit_size");
+
+	ADD_SUBGROUP("Individual Bounds Control", "terrain_");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "use_individual_bounds", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT), "set_use_individual_bounds", "get_use_individual_bounds");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "terrain_north_bound", PROPERTY_HINT_RANGE, "0.01,50000.0,0.01,suffix:m"), "set_terrain_north_bound", "get_terrain_north_bound");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "terrain_south_bound", PROPERTY_HINT_RANGE, "0.01,50000.0,0.01,suffix:m"), "set_terrain_south_bound", "get_terrain_south_bound");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "terrain_east_bound", PROPERTY_HINT_RANGE, "0.01,50000.0,0.01,suffix:m"), "set_terrain_east_bound", "get_terrain_east_bound");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "terrain_west_bound", PROPERTY_HINT_RANGE, "0.01,50000.0,0.01,suffix:m"), "set_terrain_west_bound", "get_terrain_west_bound");
 
 	ADD_SUBGROUP("Rendering", "");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "cast_shadows", PROPERTY_HINT_ENUM, "Off,On,Double-Sided,Shadows Only"), "set_cast_shadows", "get_cast_shadows");
@@ -1621,4 +1675,83 @@ void Terrain3D::_bind_methods() {
 
 	ADD_SIGNAL(MethodInfo("material_changed"));
 	ADD_SIGNAL(MethodInfo("assets_changed"));
+}
+// Individual terrain bounds control functions
+void Terrain3D::set_use_individual_bounds(const bool p_use) {
+	SET_IF_DIFF(_use_individual_bounds, p_use);
+	LOG(INFO, "Setting use individual bounds: ", _use_individual_bounds);
+
+	if (_use_individual_bounds) {
+		// Sync individual bounds from current terrain_size
+		_sync_individual_bounds_from_size();
+	} else {
+		// Sync terrain_size from individual bounds
+		_sync_size_from_individual_bounds();
+	}
+
+	if (_terrain_mesher) {
+		_terrain_mesher->snap();
+	}
+	notify_property_list_changed();
+}
+
+void Terrain3D::set_terrain_north_bound(const real_t p_bound) {
+	SET_IF_DIFF(_terrain_north_bound, CLAMP(p_bound, 0.01f, 50000.0f));
+	LOG(INFO, "Setting terrain north bound: ", _terrain_north_bound);
+	if (_use_individual_bounds) {
+		_sync_size_from_individual_bounds();
+		if (_terrain_mesher) {
+			_terrain_mesher->snap();
+		}
+	}
+}
+
+void Terrain3D::set_terrain_south_bound(const real_t p_bound) {
+	SET_IF_DIFF(_terrain_south_bound, CLAMP(p_bound, 0.01f, 50000.0f));
+	LOG(INFO, "Setting terrain south bound: ", _terrain_south_bound);
+	if (_use_individual_bounds) {
+		_sync_size_from_individual_bounds();
+		if (_terrain_mesher) {
+			_terrain_mesher->snap();
+		}
+	}
+}
+
+void Terrain3D::set_terrain_east_bound(const real_t p_bound) {
+	SET_IF_DIFF(_terrain_east_bound, CLAMP(p_bound, 0.01f, 50000.0f));
+	LOG(INFO, "Setting terrain east bound: ", _terrain_east_bound);
+	if (_use_individual_bounds) {
+		_sync_size_from_individual_bounds();
+		if (_terrain_mesher) {
+			_terrain_mesher->snap();
+		}
+	}
+}
+
+void Terrain3D::set_terrain_west_bound(const real_t p_bound) {
+	SET_IF_DIFF(_terrain_west_bound, CLAMP(p_bound, 0.01f, 50000.0f));
+	LOG(INFO, "Setting terrain west bound: ", _terrain_west_bound);
+	if (_use_individual_bounds) {
+		_sync_size_from_individual_bounds();
+		if (_terrain_mesher) {
+			_terrain_mesher->snap();
+		}
+	}
+}
+// Utility function to sync individual bounds with terrain_size
+void Terrain3D::_sync_individual_bounds_from_size() {
+	if (!_use_individual_bounds) {
+		_terrain_north_bound = _terrain_size.y * 0.5f;
+		_terrain_south_bound = _terrain_size.y * 0.5f;
+		_terrain_east_bound = _terrain_size.x * 0.5f;
+		_terrain_west_bound = _terrain_size.x * 0.5f;
+	}
+}
+
+// Utility function to sync terrain_size from individual bounds
+void Terrain3D::_sync_size_from_individual_bounds() {
+	if (_use_individual_bounds) {
+		_terrain_size.x = _terrain_east_bound + _terrain_west_bound;
+		_terrain_size.y = _terrain_north_bound + _terrain_south_bound;
+	}
 }
