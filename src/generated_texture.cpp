@@ -7,7 +7,7 @@
 #include "terrain_3d.h"
 
 ///////////////////////////
-// Public Functions
+// Public Function
 ///////////////////////////
 
 void GeneratedTexture::clear() {
