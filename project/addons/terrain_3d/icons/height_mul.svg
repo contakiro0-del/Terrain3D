@@ -19,7 +19,7 @@
    xmlns:svg="http://www.w3.org/2000/svg">
 <defs
    id="defs2033">
-	
+
 	<inkscape:path-effect
    id="path-effect6469"
    is_visible="true"
@@ -50,7 +50,7 @@
    is_visible="true"
    effect="spiro"
    lpeversion="1" />
-	
+
 		<inkscape:path-effect
    offset_points="0.76255776,0.35156248"
    not_jump="true"
@@ -67,7 +67,7 @@
    end_linecap_type="round"
    start_linecap_type="round">
 		</inkscape:path-effect>
-	
+
 		<inkscape:path-effect
    steps="1"
    threshold="0.0028332064"
@@ -159,7 +159,7 @@
    id="grid4140" />
 </sodipodi:namedview>
 <path
-   style="fill:#fc7f7f;fill-opacity:1;stroke-width:0.764771"
+   style="fill:#5fb3f5;fill-opacity:1;stroke-width:0.764771"
    d="M 1.5898438,5.5417983 C 1.0957744,5.5354539 0.56716339,5.5780631 0,5.6788781 V 15.955806 H 16 V 10.513229 C 8.6990968,16.833739 9.0008839,5.6369638 1.5898438,5.5417983 Z"
    id="path4012"
    sodipodi:nodetypes="sccccs" /><path
@@ -196,6 +196,6 @@
    d="M 0,0 14.842,0.004 16,0 Z"
    id="rect12437" /><path
    id="path7096"
-   style="fill:#fc7f7f;fill-opacity:1;stroke-width:0.764771"
+   style="fill:#5fb3f5;fill-opacity:1;stroke-width:0.764771"
    d="M 0,2.0234375 V 3.8085938 C 2.8512164,3.4688215 4.2747356,4.3685854 5.2041205,5.9137947 6.7118368,6.8603322 6.6718914,7.2163955 8.3808594,8.5644531 6.2801351,4.1747406 5.2031416,1.5917313 0,2.0234375 Z"
    sodipodi:nodetypes="ccccc" /></svg>

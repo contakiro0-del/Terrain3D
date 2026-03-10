@@ -23,14 +23,14 @@
        y2="12.261972">
       <stop
          offset="0.22192921"
-         stop-color="#5fb2ff"
+         stop-color="#5fb3f5"
          id="stop5129"
-         style="stop-color:#774343;stop-opacity:1;" />
+         style="stop-color:#5fb3f5;stop-opacity:1;" />
       <stop
          offset="1"
-         stop-color="#a2d2ff"
+         stop-color="#5fb3f5"
          id="stop5131"
-         style="stop-color:#874949;stop-opacity:0;" />
+         style="stop-color:#5fb3f5;stop-opacity:0;" />
     </linearGradient>
     <linearGradient
        id="linearGradient5117"
@@ -41,14 +41,14 @@
        y2="12.261972">
       <stop
          offset="0.33542365"
-         stop-color="#5fb2ff"
+         stop-color="#5fb3f5"
          id="stop5113"
-         style="stop-color:#654444;stop-opacity:1;" />
+         style="stop-color:#5fb3f5;stop-opacity:1;" />
       <stop
          offset="1"
-         stop-color="#a2d2ff"
+         stop-color="#5fb3f5"
          id="stop5115"
-         style="stop-color:#472323;stop-opacity:0;" />
+         style="stop-color:#5fb3f5;stop-opacity:0;" />
     </linearGradient>
     <linearGradient
        id="linearGradient986"
@@ -59,14 +59,14 @@
        y2="12.261972">
       <stop
          offset="0.33542365"
-         stop-color="#5fb2ff"
+         stop-color="#5fb3f5"
          id="stop982"
-         style="stop-color:#ffa7a7;stop-opacity:1;" />
+         style="stop-color:#5fb3f5;stop-opacity:1;" />
       <stop
          offset="1"
-         stop-color="#a2d2ff"
+         stop-color="#5fb3f5"
          id="stop984"
-         style="stop-color:#fc7f7f;stop-opacity:1;" />
+         style="stop-color:#5fb3f5;stop-opacity:1;" />
     </linearGradient>
     <radialGradient
        inkscape:collect="always"
@@ -119,24 +119,24 @@
      y2="12.261972">
     <stop
        offset="0.22192921"
-       stop-color="#5fb2ff"
+       stop-color="#5fb3f5"
        id="stop974"
-       style="stop-color:#fcaaaa;stop-opacity:1;" />
+       style="stop-color:#5fb3f5;stop-opacity:1;" />
     <stop
        offset="1"
-       stop-color="#a2d2ff"
+       stop-color="#5fb3f5"
        id="stop28"
-       style="stop-color:#fc7f7f;stop-opacity:1;" />
+       style="stop-color:#5fb3f5;stop-opacity:1;" />
   </linearGradient>
   <g
      transform="matrix(1.1122949,0,0,1.1122949,-0.89835899,-2.0106539)"
      id="g35">
     <path
        d="m 1,11.605747 7,3 7,-3 -7,-3.0000001 z"
-       fill="#a2d2ff"
+       fill="#5fb3f5"
        fill-rule="evenodd"
        id="path31"
-       style="fill:#fc7f7f;fill-opacity:1" />
+       style="fill:#5fb3f5;fill-opacity:1" />
     <path
        d="m 2.3437741,11.365789 c 1,-1.15303 1.1365135,-4.7329648 3.1357756,-4.6703265 1.1608823,0.036371 1.3735517,-4.3501566 3.1261972,-3.2262774 2.5001301,1.6032017 2.8421471,2.9505808 3.5552681,3.8083147 0.863429,1.0385227 0.749621,2.3889247 1.394253,4.0882892 -1.264298,0.828986 -7.0224636,3.616739 -11.2114939,0 z"
        fill="url(#a)"

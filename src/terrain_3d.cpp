@@ -736,6 +736,37 @@ void Terrain3D::set_mesh_size(const int p_size) {
 	}
 }
 
+// Terrain Size Control Methods
+void Terrain3D::set_terrain_position(const Vector3 &p_position) {
+	SET_IF_DIFF(_terrain_position, p_position);
+	LOG(INFO, "Setting terrain position: ", _terrain_position);
+	set_global_position(_terrain_position);
+}
+
+void Terrain3D::set_terrain_size(const Vector2 &p_size) {
+	SET_IF_DIFF(_terrain_size, Vector2(CLAMP(p_size.x, 8.0f, 4096.0f), CLAMP(p_size.y, 8.0f, 4096.0f)));
+	LOG(INFO, "Setting terrain size: ", _terrain_size);
+	if (_terrain_limit_size && _terrain_mesher) {
+		_setup_terrain_mesher();
+	}
+}
+
+void Terrain3D::set_terrain_height_scale(const real_t p_scale) {
+	SET_IF_DIFF(_terrain_height_scale, CLAMP(p_scale, 0.1f, 1000.0f));
+	LOG(INFO, "Setting terrain height scale: ", _terrain_height_scale);
+	if (_material.is_valid()) {
+		_material->update();
+	}
+}
+
+void Terrain3D::set_terrain_limit_size(const bool p_limit) {
+	SET_IF_DIFF(_terrain_limit_size, p_limit);
+	LOG(INFO, "Setting terrain limit size: ", _terrain_limit_size);
+	if (_terrain_mesher) {
+		_setup_terrain_mesher();
+	}
+}
+
 void Terrain3D::set_vertex_spacing(const real_t p_spacing) {
 	SET_IF_DIFF(_vertex_spacing, CLAMP(p_spacing, 0.25f, 100.0f));
 	LOG(INFO, "Setting vertex spacing: ", _vertex_spacing);
@@ -1368,6 +1399,17 @@ void Terrain3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_mesh_lods"), &Terrain3D::get_mesh_lods);
 	ClassDB::bind_method(D_METHOD("set_mesh_size", "size"), &Terrain3D::set_mesh_size);
 	ClassDB::bind_method(D_METHOD("get_mesh_size"), &Terrain3D::get_mesh_size);
+
+	// Terrain Size Control
+	ClassDB::bind_method(D_METHOD("set_terrain_position", "position"), &Terrain3D::set_terrain_position);
+	ClassDB::bind_method(D_METHOD("get_terrain_position"), &Terrain3D::get_terrain_position);
+	ClassDB::bind_method(D_METHOD("set_terrain_size", "size"), &Terrain3D::set_terrain_size);
+	ClassDB::bind_method(D_METHOD("get_terrain_size"), &Terrain3D::get_terrain_size);
+	ClassDB::bind_method(D_METHOD("set_terrain_height_scale", "scale"), &Terrain3D::set_terrain_height_scale);
+	ClassDB::bind_method(D_METHOD("get_terrain_height_scale"), &Terrain3D::get_terrain_height_scale);
+	ClassDB::bind_method(D_METHOD("set_terrain_limit_size", "limit"), &Terrain3D::set_terrain_limit_size);
+	ClassDB::bind_method(D_METHOD("get_terrain_limit_size"), &Terrain3D::get_terrain_limit_size);
+
 	ClassDB::bind_method(D_METHOD("set_tessellation_level", "size"), &Terrain3D::set_tessellation_level);
 	ClassDB::bind_method(D_METHOD("get_tessellation_level"), &Terrain3D::get_tessellation_level);
 	ClassDB::bind_method(D_METHOD("set_vertex_spacing", "scale"), &Terrain3D::set_vertex_spacing);
@@ -1513,6 +1555,14 @@ void Terrain3D::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "mesh_size", PROPERTY_HINT_RANGE, "8,256,2"), "set_mesh_size", "get_mesh_size");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "vertex_spacing", PROPERTY_HINT_RANGE, "0.25,10.0,or_greater"), "set_vertex_spacing", "get_vertex_spacing");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "cull_margin", PROPERTY_HINT_RANGE, "0.0,10000.0,.5,or_greater"), "set_cull_margin", "get_cull_margin");
+
+	ADD_SUBGROUP("Terrain Size Control", "terrain_");
+	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "terrain_position", PROPERTY_HINT_NONE, ""), "set_terrain_position", "get_terrain_position");
+	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "terrain_size", PROPERTY_HINT_NONE, ""), "set_terrain_size", "get_terrain_size");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "terrain_height_scale", PROPERTY_HINT_RANGE, "0.1,1000.0,0.1"), "set_terrain_height_scale", "get_terrain_height_scale");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "terrain_limit_size"), "set_terrain_limit_size", "get_terrain_limit_size");
+
+	ADD_SUBGROUP("Rendering", "");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "cast_shadows", PROPERTY_HINT_ENUM, "Off,On,Double-Sided,Shadows Only"), "set_cast_shadows", "get_cast_shadows");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "gi_mode", PROPERTY_HINT_ENUM, "Disabled,Static,Dynamic"), "set_gi_mode", "get_gi_mode");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "render_layers", PROPERTY_HINT_LAYERS_3D_RENDER), "set_render_layers", "get_render_layers");

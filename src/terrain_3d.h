@@ -61,7 +61,7 @@ private:
 	Object *_editor_plugin = nullptr;
 
 	// Regions
-	RegionSize _region_size = SIZE_256;
+	RegionSize _region_size = SIZE_64;
 	bool _save_16_bit = false;
 	real_t _label_distance = 0.f;
 	int _label_size = 48;
@@ -75,11 +75,18 @@ private:
 	// Terrain Mesh
 	Terrain3DMesher *_terrain_mesher = nullptr;
 	Ref<Terrain3DMaterial> _material;
-	int _mesh_lods = 7;
+	int _mesh_lods = 2;
 	int _tessellation_level = 0;
-	int _mesh_size = 48;
+	int _mesh_size = 24;
 	real_t _vertex_spacing = 1.0f;
 	real_t _cull_margin = 0.0f;
+
+	// Terrain Size Control
+	Vector3 _terrain_position = Vector3(0, 0, 0);
+	Vector2 _terrain_size = Vector2(64, 64);
+	real_t _terrain_height_scale = 100.0f;
+	bool _terrain_limit_size = true;
+
 	RenderingServer::ShadowCastingSetting _cast_shadows = RenderingServer::SHADOW_CASTING_SETTING_ON;
 	GeometryInstance3D::GIMode _gi_mode = GeometryInstance3D::GI_MODE_STATIC;
 	uint32_t _render_layers = 1u | (1u << 31u); // Bit 1 and 32 for the cursor
@@ -92,9 +99,9 @@ private:
 	// Ocean Mesh
 	Terrain3DMesher *_ocean_mesher = nullptr;
 	bool _ocean_enabled = false;
-	int _ocean_mesh_lods = 7;
+	int _ocean_mesh_lods = 2;
 	int _ocean_tessellation_level = 0;
-	int _ocean_mesh_size = 32;
+	int _ocean_mesh_size = 16;
 	real_t _ocean_vertex_spacing = 4.0f;
 	real_t _ocean_cull_margin = 20.0f;
 	RenderingServer::ShadowCastingSetting _ocean_cast_shadows = RenderingServer::SHADOW_CASTING_SETTING_OFF;
@@ -218,6 +225,17 @@ public:
 	int get_tessellation_level() const { return _tessellation_level; }
 	void set_mesh_size(const int p_size);
 	int get_mesh_size() const { return _mesh_size; }
+
+	// Terrain Size Control
+	void set_terrain_position(const Vector3 &p_position);
+	Vector3 get_terrain_position() const { return _terrain_position; }
+	void set_terrain_size(const Vector2 &p_size);
+	Vector2 get_terrain_size() const { return _terrain_size; }
+	void set_terrain_height_scale(const real_t p_scale);
+	real_t get_terrain_height_scale() const { return _terrain_height_scale; }
+	void set_terrain_limit_size(const bool p_limit);
+	bool get_terrain_limit_size() const { return _terrain_limit_size; }
+
 	void set_vertex_spacing(const real_t p_spacing);
 	real_t get_vertex_spacing() const { return _vertex_spacing; }
 	void set_cull_margin(const real_t p_margin);

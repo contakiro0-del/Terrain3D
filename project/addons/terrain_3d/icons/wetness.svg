@@ -6,12 +6,17 @@
 	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px"
 	 viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
 <defs>
-	
+	<linearGradient id="wetnessGradient" gradientUnits="userSpaceOnUse" x1="3.354" y1="4.646" x2="12.646" y2="15.863">
+		<stop offset="0" style="stop-color:#5fb3f5;stop-opacity:1;" />
+		<stop offset="0.5" style="stop-color:#7fb0bd;stop-opacity:1;" />
+		<stop offset="1" style="stop-color:#7ffc7f;stop-opacity:1;" />
+	</linearGradient>
+
 	<inkscape:path-effect  lpeversion="1" effect="spiro" is_visible="true" id="path-effect8712"></inkscape:path-effect>
-	
+
 		<inkscape:path-effect  scale_width="1" miter_limit="4" linejoin_type="spiro" sort_points="true" not_jump="true" offset_points="0.86174895,0.26516503" lpeversion="1" effect="powerstroke" is_visible="true" id="path-effect8643" end_linecap_type="round" start_linecap_type="round" interpolator_beta="0.75" interpolator_type="CentripetalCatmullRom">
 		</inkscape:path-effect>
-	
+
 		<inkscape:path-effect  step="1" helper_size="0" smooth_angles="0" threshold="0.0028332064" steps="1" lpeversion="1" effect="simplify" is_visible="true" id="path-effect8641" simplify_just_coalesce="false" simplify_individual_paths="false">
 		</inkscape:path-effect>
 	<inkscape:path-effect  lpeversion="1" effect="spiro" is_visible="true" id="path-effect5927"></inkscape:path-effect>
@@ -36,6 +41,6 @@
 	<inkscape:grid  type="xygrid" id="grid4140"></inkscape:grid>
 </sodipodi:namedview>
 <path id="path34808" fill="none" d="M-0.761-0.199h17.523v17.523H-0.761V-0.199z"/>
-<path id="path34810" sodipodi:nodetypes="cccsc" fill="#65C1ED" d="M3.354,4.646L8,0l4.646,4.646
+<path id="path34810" sodipodi:nodetypes="cccsc" fill="url(#wetnessGradient)" d="M3.354,4.646L8,0l4.646,4.646
 	c4.14,4.14,1.207,11.217-4.646,11.217S-0.786,8.786,3.354,4.646z"/>
 </svg>
