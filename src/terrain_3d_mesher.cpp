@@ -320,6 +320,16 @@ void Terrain3DMesher::snap() {
 	IS_INIT(VOID);
 	// Always update target position in shader
 	Vector3 target_pos = _terrain->get_clipmap_target_position();
+
+	// For limited terrain, center on terrain position instead of following camera
+	if (_terrain->get_terrain_limit_size()) {
+		Vector3 terrain_pos = _terrain->get_terrain_position();
+		Vector2 terrain_size = _terrain->get_terrain_size();
+
+		// Center the clipmap on the terrain center for static rendering
+		target_pos = terrain_pos;
+	}
+
 	if (_material.is_valid()) {
 		RS->material_set_param(_material, "_target_pos", target_pos);
 	}
@@ -396,6 +406,11 @@ void Terrain3DMesher::snap() {
 				}
 				t = t.scaled(lod_scale);
 				t.origin += pos;
+
+				// Apply terrain size limits to mesh instances if enabled
+				bool should_render = is_within_terrain_bounds(t.origin);
+				RS->instance_set_visible(mesh_array[instance], should_render && _terrain->is_visible_in_tree());
+
 				RS->instance_set_transform(mesh_array[instance], t);
 				RS->instance_teleport(mesh_array[instance]);
 			}
@@ -474,4 +489,33 @@ void Terrain3DMesher::update_aabbs(const real_t p_cull_margin, const Vector2 &p_
 		RS->mesh_set_custom_aabb(rid, aabb);
 	}
 	return;
+}
+// Check if a world position is within the terrain bounds when size limiting is enabled
+bool Terrain3DMesher::is_within_terrain_bounds(const Vector3 &world_pos) const {
+	if (!_terrain || !_terrain->get_terrain_limit_size()) {
+		return true; // No limits, always within bounds
+	}
+
+	Vector3 terrain_pos = _terrain->get_terrain_position();
+
+	if (_terrain->get_use_individual_bounds()) {
+		// Use individual bounds for each direction
+		real_t north_bound = _terrain->get_terrain_north_bound();
+		real_t south_bound = _terrain->get_terrain_south_bound();
+		real_t east_bound = _terrain->get_terrain_east_bound();
+		real_t west_bound = _terrain->get_terrain_west_bound();
+
+		return (world_pos.x >= terrain_pos.x - west_bound &&   // West boundary
+		        world_pos.x <= terrain_pos.x + east_bound &&   // East boundary
+		        world_pos.z >= terrain_pos.z - south_bound &&  // South boundary
+		        world_pos.z <= terrain_pos.z + north_bound);   // North boundary
+	} else {
+		// Use symmetric terrain size
+		Vector2 terrain_size = _terrain->get_terrain_size();
+
+		return (world_pos.x >= terrain_pos.x - terrain_size.x * 0.5f &&
+		        world_pos.x <= terrain_pos.x + terrain_size.x * 0.5f &&
+		        world_pos.z >= terrain_pos.z - terrain_size.y * 0.5f &&
+		        world_pos.z <= terrain_pos.z + terrain_size.y * 0.5f);
+	}
 }
