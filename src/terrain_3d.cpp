@@ -1794,10 +1794,6 @@ void Terrain3D::set_terrain_base_height(const real_t p_height) {
 	}
 }
 
-real_t Terrain3D::get_terrain_base_height() const {
-	return _terrain_base_height;
-}
-
 // Sistema de unidades de medida
 void Terrain3D::set_measurement_unit(const MeasurementUnit p_unit) {
 	SET_IF_DIFF(_measurement_unit, p_unit);
