@@ -1,0 +1,13 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Seta Y (verde) -->
+  <path d="M8 2 L8 10 M6 4 L8 2 L10 4" stroke="#5fb3f5" stroke-width="1.5" fill="none"/>
+  <!-- Seta X (azul) -->
+  <path d="M2 8 L10 8 M4 6 L2 8 L4 10" stroke="#5fb3f5" stroke-width="1.5" fill="none"/>
+  <!-- Seta Z (azul) -->
+  <path d="M8 8 L14 14 M12 10 L14 8 L12 12" stroke="#5fb3f5" stroke-width="1.2" fill="none"/>
+  <!-- Centro -->
+  <circle cx="8" cy="8" r="1.5" fill="#5fb3f5"/>
+  <!-- Quadrados de escala -->
+  <rect x="11" y="3" width="2" height="2" fill="none" stroke="#5fb3f5" stroke-width="1"/>
+  <rect x="3" y="11" width="2" height="2" fill="none" stroke="#5fb3f5" stroke-width="1"/>
+</svg>

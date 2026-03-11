@@ -87,6 +87,12 @@ void Terrain3D::_initialize() {
 		_setup_ocean_mesher();
 		_update_displacement_buffer();
 		_initialized = true;
+
+		// Apply initial terrain position with base height
+		Vector3 final_position = _terrain_position;
+		final_position.y += _terrain_base_height;
+		set_global_position(final_position);
+
 		snap();
 	}
 	update_configuration_warnings();
@@ -742,7 +748,12 @@ void Terrain3D::set_mesh_size(const int p_size) {
 void Terrain3D::set_terrain_position(const Vector3 &p_position) {
 	SET_IF_DIFF(_terrain_position, p_position);
 	LOG(INFO, "Setting terrain position: ", _terrain_position);
-	set_global_position(_terrain_position);
+
+	// Apply base height offset to the final position
+	Vector3 final_position = _terrain_position;
+	final_position.y += _terrain_base_height;
+	set_global_position(final_position);
+
 	// Force update of mesh visibility when position changes
 	if (_terrain_limit_size && _terrain_mesher) {
 		_terrain_mesher->snap();
@@ -1444,6 +1455,18 @@ void Terrain3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_terrain_height_scale"), &Terrain3D::get_terrain_height_scale);
 	ClassDB::bind_method(D_METHOD("set_terrain_limit_size", "limit"), &Terrain3D::set_terrain_limit_size);
 	ClassDB::bind_method(D_METHOD("get_terrain_limit_size"), &Terrain3D::get_terrain_limit_size);
+	ClassDB::bind_method(D_METHOD("set_terrain_base_height", "height"), &Terrain3D::set_terrain_base_height);
+	ClassDB::bind_method(D_METHOD("get_terrain_base_height"), &Terrain3D::get_terrain_base_height);
+
+	// Sistema de unidades de medida
+	ClassDB::bind_method(D_METHOD("set_measurement_unit", "unit"), &Terrain3D::set_measurement_unit);
+	ClassDB::bind_method(D_METHOD("get_measurement_unit"), &Terrain3D::get_measurement_unit);
+	ClassDB::bind_method(D_METHOD("get_unit_scale"), &Terrain3D::get_unit_scale);
+	ClassDB::bind_method(D_METHOD("get_terrain_size_in_unit"), &Terrain3D::get_terrain_size_in_unit);
+	ClassDB::bind_method(D_METHOD("set_terrain_size_in_unit", "size"), &Terrain3D::set_terrain_size_in_unit);
+	ClassDB::bind_method(D_METHOD("get_terrain_height_in_unit"), &Terrain3D::get_terrain_height_in_unit);
+	ClassDB::bind_method(D_METHOD("set_terrain_height_in_unit", "height"), &Terrain3D::set_terrain_height_in_unit);
+	ClassDB::bind_method(D_METHOD("get_unit_suffix"), &Terrain3D::get_unit_suffix);
 
 	// Individual terrain bounds
 	ClassDB::bind_method(D_METHOD("set_use_individual_bounds", "use"), &Terrain3D::set_use_individual_bounds);
@@ -1604,9 +1627,11 @@ void Terrain3D::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "cull_margin", PROPERTY_HINT_RANGE, "0.0,10000.0,.5,or_greater"), "set_cull_margin", "get_cull_margin");
 
 	ADD_SUBGROUP("Terrain Size Control", "terrain_");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "measurement_unit", PROPERTY_HINT_ENUM, "Centimeters,Meters,Kilometers", PROPERTY_USAGE_DEFAULT), "set_measurement_unit", "get_measurement_unit");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "terrain_position", PROPERTY_HINT_NONE, "suffix:m", PROPERTY_USAGE_DEFAULT), "set_terrain_position", "get_terrain_position");
-	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "terrain_size", PROPERTY_HINT_NONE, "suffix:m", PROPERTY_USAGE_DEFAULT), "set_terrain_size", "get_terrain_size");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "terrain_height_scale", PROPERTY_HINT_RANGE, "0.01,10000.0,0.01,suffix:m"), "set_terrain_height_scale", "get_terrain_height_scale");
+	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "terrain_size_in_unit", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT), "set_terrain_size_in_unit", "get_terrain_size_in_unit");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "terrain_height_in_unit", PROPERTY_HINT_RANGE, "0.01,100000.0,0.01", PROPERTY_USAGE_DEFAULT), "set_terrain_height_in_unit", "get_terrain_height_in_unit");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "terrain_base_height", PROPERTY_HINT_RANGE, "-1000.0,1000.0,0.1,suffix:m"), "set_terrain_base_height", "get_terrain_base_height");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "terrain_limit_size", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT), "set_terrain_limit_size", "get_terrain_limit_size");
 
 	ADD_SUBGROUP("Individual Bounds Control", "terrain_");
@@ -1753,5 +1778,86 @@ void Terrain3D::_sync_size_from_individual_bounds() {
 	if (_use_individual_bounds) {
 		_terrain_size.x = _terrain_east_bound + _terrain_west_bound;
 		_terrain_size.y = _terrain_north_bound + _terrain_south_bound;
+	}
+}
+void Terrain3D::set_terrain_base_height(const real_t p_height) {
+	SET_IF_DIFF(_terrain_base_height, p_height);
+	LOG(INFO, "Setting terrain base height: ", _terrain_base_height);
+
+	// Update terrain position to reflect base height
+	Vector3 current_pos = get_global_position();
+	current_pos.y = _terrain_position.y + _terrain_base_height;
+	set_global_position(current_pos);
+
+	if (_terrain_mesher) {
+		_terrain_mesher->snap();
+	}
+}
+
+real_t Terrain3D::get_terrain_base_height() const {
+	return _terrain_base_height;
+}
+
+// Sistema de unidades de medida
+void Terrain3D::set_measurement_unit(const MeasurementUnit p_unit) {
+	SET_IF_DIFF(_measurement_unit, p_unit);
+
+	// Atualizar escala baseada na unidade
+	switch (_measurement_unit) {
+		case UNIT_CENTIMETERS:
+			_unit_scale = 0.01f; // 1cm = 0.01m
+			break;
+		case UNIT_METERS:
+			_unit_scale = 1.0f; // 1m = 1m
+			break;
+		case UNIT_KILOMETERS:
+			_unit_scale = 1000.0f; // 1km = 1000m
+			break;
+	}
+
+	// Atualizar vertex_spacing baseado na unidade
+	switch (_measurement_unit) {
+		case UNIT_CENTIMETERS:
+			set_vertex_spacing(0.01f); // 1cm entre vértices
+			break;
+		case UNIT_METERS:
+			set_vertex_spacing(1.0f); // 1m entre vértices
+			break;
+		case UNIT_KILOMETERS:
+			set_vertex_spacing(100.0f); // 100m entre vértices (para terrenos grandes)
+			break;
+	}
+
+	LOG(INFO, "Setting measurement unit: ", _measurement_unit, " (scale: ", _unit_scale, ")");
+}
+
+Vector2 Terrain3D::get_terrain_size_in_unit() const {
+	return _terrain_size / _unit_scale;
+}
+
+void Terrain3D::set_terrain_size_in_unit(const Vector2 &p_size) {
+	Vector2 size_in_meters = p_size * _unit_scale;
+	set_terrain_size(size_in_meters);
+}
+
+real_t Terrain3D::get_terrain_height_in_unit() const {
+	return _terrain_height_scale / _unit_scale;
+}
+
+void Terrain3D::set_terrain_height_in_unit(const real_t p_height) {
+	real_t height_in_meters = p_height * _unit_scale;
+	set_terrain_height_scale(height_in_meters);
+}
+
+String Terrain3D::get_unit_suffix() const {
+	switch (_measurement_unit) {
+		case UNIT_CENTIMETERS:
+			return "cm";
+		case UNIT_METERS:
+			return "m";
+		case UNIT_KILOMETERS:
+			return "km";
+		default:
+			return "m";
 	}
 }

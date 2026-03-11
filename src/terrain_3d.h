@@ -82,10 +82,20 @@ private:
 	real_t _cull_margin = 0.0f;
 
 	// Terrain Size Control
-	Vector3 _terrain_position = Vector3(0, 0, 0);
+	Vector3 _terrain_position = Vector3(0, 50, 0); // Elevado para ficar acima da malha
 	Vector2 _terrain_size = Vector2(1000, 1000); // 1km x 1km default
 	real_t _terrain_height_scale = 100.0f;
 	bool _terrain_limit_size = true;
+	real_t _terrain_base_height = 50.0f; // Altura base do terreno (offset Y) - elevado para ficar acima da malha
+
+	// Sistema de unidades de medida
+	enum MeasurementUnit {
+		UNIT_CENTIMETERS = 0,
+		UNIT_METERS = 1,
+		UNIT_KILOMETERS = 2
+	};
+	MeasurementUnit _measurement_unit = UNIT_METERS;
+	real_t _unit_scale = 1.0f; // Escala baseada na unidade selecionada
 
 	// Individual terrain bounds (for advanced control)
 	real_t _terrain_north_bound = 500.0f;  // +Z direction
@@ -246,6 +256,20 @@ public:
 	real_t get_terrain_height_scale() const { return _terrain_height_scale; }
 	void set_terrain_limit_size(const bool p_limit);
 	bool get_terrain_limit_size() const { return _terrain_limit_size; }
+	void set_terrain_base_height(const real_t p_height);
+	real_t get_terrain_base_height() const { return _terrain_base_height; }
+
+	// Sistema de unidades de medida
+	void set_measurement_unit(const MeasurementUnit p_unit);
+	MeasurementUnit get_measurement_unit() const { return _measurement_unit; }
+	real_t get_unit_scale() const { return _unit_scale; }
+
+	// Funções de conversão de unidades
+	Vector2 get_terrain_size_in_unit() const;
+	void set_terrain_size_in_unit(const Vector2 &p_size);
+	real_t get_terrain_height_in_unit() const;
+	void set_terrain_height_in_unit(const real_t p_height);
+	String get_unit_suffix() const;
 
 	// Individual terrain bounds control
 	void set_use_individual_bounds(const bool p_use);
@@ -380,6 +404,7 @@ protected:
 
 VARIANT_ENUM_CAST(Terrain3D::RegionSize);
 VARIANT_ENUM_CAST(Terrain3D::DebugLevel);
+VARIANT_ENUM_CAST(Terrain3D::MeasurementUnit);
 
 constexpr Terrain3D::DebugLevel MESG = Terrain3D::DebugLevel::MESG;
 constexpr Terrain3D::DebugLevel WARN = Terrain3D::DebugLevel::WARN;

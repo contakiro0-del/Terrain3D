@@ -19,6 +19,7 @@ const ICON_AUTOSHADER: String = "res://addons/terrain_3d/icons/autoshader.svg"
 const ICON_HOLES: String = "res://addons/terrain_3d/icons/holes.svg"
 const ICON_NAVIGATION: String = "res://addons/terrain_3d/icons/navigation.svg"
 const ICON_INSTANCER: String = "res://addons/terrain_3d/icons/multimesh.svg"
+const ICON_TERRAIN_GIZMO: String = "res://addons/terrain_3d/icons/terrain_gizmo.svg"
 
 var add_tool_group: ButtonGroup = ButtonGroup.new()
 var sub_tool_group: ButtonGroup = ButtonGroup.new()
@@ -34,32 +35,32 @@ func _ready() -> void:
 	add_tool_group.pressed.connect(_on_tool_selected)
 	sub_tool_group.pressed.connect(_on_tool_selected)
 
-	add_tool_button({ "tool":Terrain3DEditor.REGION, 
+	add_tool_button({ "tool":Terrain3DEditor.REGION,
 		"add_text":"Add Region (E)", "add_op":Terrain3DEditor.ADD, "add_icon":ICON_REGION_ADD,
 		"sub_text":"Remove Region", "sub_op":Terrain3DEditor.SUBTRACT, "sub_icon":ICON_REGION_REMOVE })
-	
+
 	add_child(HSeparator.new())
-	
-	add_tool_button({ "tool":Terrain3DEditor.SCULPT, 
+
+	add_tool_button({ "tool":Terrain3DEditor.SCULPT,
 		"add_text":"Raise (R)", "add_op":Terrain3DEditor.ADD, "add_icon":ICON_HEIGHT_ADD,
 		"sub_text":"Lower (R)", "sub_op":Terrain3DEditor.SUBTRACT, "sub_icon":ICON_HEIGHT_SUB })
 
-	add_tool_button({ "tool":Terrain3DEditor.SCULPT, 
+	add_tool_button({ "tool":Terrain3DEditor.SCULPT,
 		"add_text":"Smooth (Shift)", "add_op":Terrain3DEditor.AVERAGE, "add_icon":ICON_HEIGHT_SMOOTH })
 
-	add_tool_button({ "tool":Terrain3DEditor.HEIGHT, 
+	add_tool_button({ "tool":Terrain3DEditor.HEIGHT,
 		"add_text":"Height (H)", "add_op":Terrain3DEditor.ADD, "add_icon":ICON_HEIGHT_FLAT,
 		"sub_text":"Height (H)", "sub_op":Terrain3DEditor.SUBTRACT, "sub_icon":ICON_HEIGHT_FLAT })
 
-	add_tool_button({ "tool":Terrain3DEditor.SCULPT, 
+	add_tool_button({ "tool":Terrain3DEditor.SCULPT,
 		"add_text":"Slope (S)", "add_op":Terrain3DEditor.GRADIENT, "add_icon":ICON_HEIGHT_SLOPE })
 
 	add_child(HSeparator.new())
 
-	add_tool_button({ "tool":Terrain3DEditor.TEXTURE, 
+	add_tool_button({ "tool":Terrain3DEditor.TEXTURE,
 		"add_text":"Paint Texture (B)", "add_op":Terrain3DEditor.REPLACE, "add_icon":ICON_PAINT_TEXTURE })
 
-	add_tool_button({ "tool":Terrain3DEditor.TEXTURE, 
+	add_tool_button({ "tool":Terrain3DEditor.TEXTURE,
 		"add_text":"Spray Texture (V)", "add_op":Terrain3DEditor.ADD, "add_icon":ICON_SPRAY_TEXTURE })
 
 	add_tool_button({ "tool":Terrain3DEditor.AUTOSHADER,
@@ -71,7 +72,7 @@ func _ready() -> void:
 	add_tool_button({ "tool":Terrain3DEditor.COLOR,
 		"add_text":"Paint Color (C)", "add_op":Terrain3DEditor.ADD, "add_icon":ICON_COLOR,
 		"sub_text":"Remove Color (C)", "sub_op":Terrain3DEditor.SUBTRACT })
-	
+
 	add_tool_button({ "tool":Terrain3DEditor.ROUGHNESS,
 		"add_text":"Paint Wetness (W)", "add_op":Terrain3DEditor.ADD, "add_icon":ICON_WETNESS,
 		"sub_text":"Remove Wetness (W)", "sub_op":Terrain3DEditor.SUBTRACT })
@@ -89,6 +90,20 @@ func _ready() -> void:
 	add_tool_button({ "tool":Terrain3DEditor.INSTANCER,
 		"add_text":"Instance Meshes (I)", "add_op":Terrain3DEditor.ADD, "add_icon":ICON_INSTANCER,
 		"sub_text":"Remove Meshes (I)", "sub_op":Terrain3DEditor.SUBTRACT })
+
+	add_child(HSeparator.new())
+
+	# Botão de Gizmos de Transformação
+	var gizmo_button := Button.new()
+	gizmo_button.set_name("TerrainGizmo")
+	gizmo_button.set_tooltip_text("Toggle Terrain Transform Gizmos")
+	gizmo_button.set_button_icon(load(ICON_TERRAIN_GIZMO))
+	gizmo_button.set_flat(true)
+	gizmo_button.set_toggle_mode(true)
+	gizmo_button.set_h_size_flags(SIZE_SHRINK_END)
+	gizmo_button.pressed.connect(_on_gizmo_button_pressed)
+	add_child(gizmo_button, true)
+	buttons["TerrainGizmo"] = gizmo_button
 
 	# Select first button
 	var buttons: Array[BaseButton] = add_tool_group.get_buttons()
@@ -148,6 +163,17 @@ func show_add_buttons(p_enable: bool) -> void:
 func _on_tool_selected(p_button: BaseButton) -> void:
 	if plugin.debug:
 		print("Terrain3DToolbar: _on_tool_selected: ", p_button)
+
+
+func _on_gizmo_button_pressed() -> void:
+	var gizmo_button = buttons.get("TerrainGizmo")
+	if gizmo_button and plugin.terrain:
+		var is_pressed = gizmo_button.button_pressed
+		plugin.terrain.set_meta("show_gizmos", is_pressed)
+
+		# Notificar o plugin para mostrar/esconder gizmos
+		if plugin.has_method("_on_terrain_gizmo_toggled"):
+			plugin._on_terrain_gizmo_toggled(is_pressed)
 	# Select same tool on negative bar
 	var group: ButtonGroup = p_button.get_button_group()
 	var change_group: ButtonGroup = add_tool_group if group == sub_tool_group else sub_tool_group
@@ -155,8 +181,8 @@ func _on_tool_selected(p_button: BaseButton) -> void:
 	for button in change_group.get_buttons():
 		button.set_pressed_no_signal(button.get_meta("ID", -1) == id)
 	if plugin.debug:
-		print("Terrain3DToolbar: _on_tool_selected: emitting tool_changed, ", 
-			p_button.get_meta("Tool", Terrain3DEditor.TOOL_MAX), ", ", 
+		print("Terrain3DToolbar: _on_tool_selected: emitting tool_changed, ",
+			p_button.get_meta("Tool", Terrain3DEditor.TOOL_MAX), ", ",
 			p_button.get_meta("Operation", Terrain3DEditor.OP_MAX))
 	emit_signal("tool_changed", p_button.get_meta("Tool", Terrain3DEditor.TOOL_MAX), p_button.get_meta("Operation", Terrain3DEditor.OP_MAX))
 
