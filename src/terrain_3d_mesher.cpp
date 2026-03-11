@@ -490,9 +490,6 @@ void Terrain3DMesher::update_aabbs(const real_t p_cull_margin, const Vector2 &p_
 	}
 	return;
 }
-<<<<<<< HEAD
-
-=======
 // Check if a world position is within the terrain bounds when size limiting is enabled
 bool Terrain3DMesher::is_within_terrain_bounds(const Vector3 &world_pos) const {
 	if (!_terrain || !_terrain->get_terrain_limit_size()) {
@@ -522,4 +519,3 @@ bool Terrain3DMesher::is_within_terrain_bounds(const Vector3 &world_pos) const {
 		        world_pos.z <= terrain_pos.z + terrain_size.y * 0.5f);
 	}
 }
->>>>>>> b55ae33141386f2025678e1549ec412a4d1917bb

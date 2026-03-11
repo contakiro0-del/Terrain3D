@@ -78,34 +78,7 @@ public:
 	void update_aabbs(const real_t p_cull_margin = -1.f, const Vector2 &p_height_range = V2_MAX);
 
 	// Terrain bounds checking
-	bool is_within_terrain_bounds(const Vector3 &world_pos) const {
-		if (!_terrain || !_terrain->get_terrain_limit_size()) {
-			return true; // No limits, always within bounds
-		}
-
-		Vector3 terrain_pos = _terrain->get_terrain_position();
-
-		if (_terrain->get_use_individual_bounds()) {
-			// Use individual bounds for each direction
-			real_t north_bound = _terrain->get_terrain_north_bound();
-			real_t south_bound = _terrain->get_terrain_south_bound();
-			real_t east_bound = _terrain->get_terrain_east_bound();
-			real_t west_bound = _terrain->get_terrain_west_bound();
-
-			return (world_pos.x >= terrain_pos.x - west_bound &&   // West boundary
-			        world_pos.x <= terrain_pos.x + east_bound &&   // East boundary
-			        world_pos.z >= terrain_pos.z - south_bound &&  // South boundary
-			        world_pos.z <= terrain_pos.z + north_bound);   // North boundary
-		} else {
-			// Use symmetric terrain size
-			Vector2 terrain_size = _terrain->get_terrain_size();
-
-			return (world_pos.x >= terrain_pos.x - terrain_size.x * 0.5f &&
-			        world_pos.x <= terrain_pos.x + terrain_size.x * 0.5f &&
-			        world_pos.z >= terrain_pos.z - terrain_size.y * 0.5f &&
-			        world_pos.z <= terrain_pos.z + terrain_size.y * 0.5f);
-		}
-	}
+	bool is_within_terrain_bounds(const Vector3 &world_pos) const;
 
 	void set_material(const RID &p_material) { _material = p_material; }
 	RID get_material() const { return _material; }
