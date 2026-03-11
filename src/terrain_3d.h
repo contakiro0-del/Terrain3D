@@ -45,6 +45,12 @@ public: // Constants
 		SIZE_2048 = 2048,
 	};
 
+	enum MeasurementUnit {
+		UNIT_CENTIMETERS = 0,
+		UNIT_METERS = 1,
+		UNIT_KILOMETERS = 2
+	};
+
 private:
 	String _version = "1.1.0-dev";
 	String _data_directory;
@@ -89,11 +95,6 @@ private:
 	real_t _terrain_base_height = 50.0f; // Altura base do terreno (offset Y) - elevado para ficar acima da malha
 
 	// Sistema de unidades de medida
-	enum MeasurementUnit {
-		UNIT_CENTIMETERS = 0,
-		UNIT_METERS = 1,
-		UNIT_KILOMETERS = 2
-	};
 	MeasurementUnit _measurement_unit = UNIT_METERS;
 	real_t _unit_scale = 1.0f; // Escala baseada na unidade selecionada
 
